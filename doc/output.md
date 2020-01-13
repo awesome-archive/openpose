@@ -5,15 +5,17 @@ OpenPose Demo - Output
 
 ## Contents
 1. [Output Format](#output-format)
-    1. [Keypoint Ordering](#keypoint-ordering)
+    1. [Keypoint Ordering in C++/Python](#keypoint-ordering-in-c-python)
     2. [Heatmap Ordering](#heatmap-ordering)
     3. [Heatmap Saving in Float Format](#heatmap-saving-in-float-format)
-    4. [Face and Hands](#face-and-hands)
-    5. [Pose Output Format](#pose-output-format)
-    6. [Face Output Format](#face-output-format)
-    7. [Hand Output Format](#hand-output-format)
-3. [Reading Saved Results](#reading-saved-results)
-4. [Keypoint Format in the C++ API](#keypoint-format-in-the-c-api)
+    4. [Heatmap Scaling](#heatmap-scaling)
+    5. [Face and Hands](#face-and-hands)
+    6. [Pose Output Format](#pose-output-format)
+    7. [Face Output Format](#face-output-format)
+    8. [Hand Output Format](#hand-output-format)
+2. [Reading Saved Results](#reading-saved-results)
+3. [Keypoint Format in the C++ API](#keypoint-format-in-the-c-api)
+4. [Camera Matrix Output Format](#camera-matrix-output-format)
 
 
 
@@ -68,11 +70,11 @@ There are 2 alternatives to save the OpenPose output.
 
 2. (Deprecated) The `write_keypoint` flag uses the OpenCV cv::FileStorage default formats, i.e., JSON (available after OpenCV 3.0), XML, and YML. Note that it does not include any other information othern than keypoints.
 
-Both of them follow the keypoint ordering described in the [Keypoint Ordering](#keypoint-ordering) section.
+Both of them follow the keypoint ordering described in the [Keypoint Ordering in C++/Python](#keypoint-ordering-in-c-python) section.
 
 
 
-### Keypoint Ordering
+### Keypoint Ordering in C++/Python
 The body part mapping order of any body model (e.g., COCO, MPI) can be extracted from the C++ API by using the `getPoseBodyPartMapping(const PoseModel poseModel)` function available in [poseParameters.hpp](../include/openpose/pose/poseParameters.hpp):
 ```
 // C++ API call
@@ -80,6 +82,8 @@ The body part mapping order of any body model (e.g., COCO, MPI) can be extracted
 const auto& poseBodyPartMappingBody25 = getPoseBodyPartMapping(PoseModel::BODY_25);
 const auto& poseBodyPartMappingCoco = getPoseBodyPartMapping(PoseModel::COCO_18);
 const auto& poseBodyPartMappingMpi = getPoseBodyPartMapping(PoseModel::MPI_15);
+const auto& poseBodyPartMappingBody25B = getPoseBodyPartMapping(PoseModel::BODY_25B);
+const auto& poseBodyPartMappingBody135 = getPoseBodyPartMapping(PoseModel::BODY_135);
 
 // Result for BODY_25 (25 body parts consisting of COCO + foot)
 // const std::map<unsigned int, std::string> POSE_BODY_25_BODY_PARTS {
@@ -110,6 +114,15 @@ const auto& poseBodyPartMappingMpi = getPoseBodyPartMapping(PoseModel::MPI_15);
 //     {24, "RHeel"},
 //     {25, "Background"}
 // };
+```
+
+In Python, you can check them with the following code:
+```
+poseModel = op.PoseModel.BODY_25
+print(op.getPoseBodyPartMapping(poseModel))
+print(op.getPoseNumberBodyParts(poseModel))
+print(op.getPosePartPairs(poseModel))
+print(op.getPoseMapIndex(poseModel))
 ```
 
 
@@ -150,6 +163,11 @@ assert shape_x[1] == 300 # Size of the second dimension
 assert shape_x[2] == 500 # Size of the third dimension
 arrayData = x[1+int(round(x[0])):]
 ```
+
+
+
+### Heatmap Scaling
+Note that `--net_resolution` sets the size of the network, thus also the size of the output heatmaps. This heatmaps are resized while keeping the aspect ratio. When aspect ratio of the the input and network are not the same, padding is added at the bottom and/or right part of the output heatmaps.
 
 
 
@@ -253,3 +271,6 @@ There are 3 different keypoint `Array<float>` elements in the `Datum` class:
     const auto yR = handKeypoints[1][baseIndex + 1];
     const auto scoreR = handKeypoints[1][baseIndex + 2];
 ```
+
+## Camera Matrix Output Format
+Check [doc/modules/calibration_module.md#camera-matrix-output-format](./modules/calibration_module.md#camera-matrix-output-format).
